@@ -109,8 +109,7 @@ export class DefaultRenderer implements Renderer {
     stats: ClusterStats
   ): google.maps.Marker {
     // change color if this cluster has more markers than the mean cluster
-    const color =
-      count > Math.max(10, stats.clusters.markers.mean) ? "#ff0000" : "#0000ff";
+    const color = "#0000ff"; // changing cluster color to just blue
 
     // create svg url with fill color
     const svg = window.btoa(`
