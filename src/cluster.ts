@@ -55,11 +55,7 @@ export class Cluster {
    */
   public get count(): number {
    // cluster counter show frames count, not furniture count
-    let counter = 0;
-    let visibleMarkers = this.markers.filter((m: google.maps.Marker) => m.getVisible());
-    if (visibleMarkers && visibleMarkers.length && visibleMarkers[0].frames) {
-      visibleMarkers.forEach(a => counter += a.frames.length);
-    }
+    let counter = this.markers.filter(marker => marker.getVisible()).map(m => m.frames.filter(frame => frame.visible).length).reduce((a,b) => (a+b));
     return counter;
   }
 
