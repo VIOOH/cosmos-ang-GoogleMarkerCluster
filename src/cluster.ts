@@ -54,8 +54,11 @@ export class Cluster {
    * Get the count of **visible** markers.
    */
   public get count(): number {
-   // cluster counter show frames count, not furniture count
-    let counter = this.markers.filter(marker => marker.getVisible()).map(m => m.frames.filter(frame => frame.visible).length).reduce((a,b) => (a+b));
+    // cluster counter show frames count, not furniture count
+    const counter = this.markers
+      .filter((marker) => marker.getVisible())
+      .map((m: any) => m.frames.filter((frame: any) => frame.visible).length)
+      .reduce((a, b) => a + b);
     return counter;
   }
 
