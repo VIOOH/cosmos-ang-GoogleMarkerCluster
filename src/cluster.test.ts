@@ -52,7 +52,7 @@ test("delete if marker set", () => {
   const cluster = new Cluster({ markers: [new google.maps.Marker()] });
   cluster["markers"][0].getVisible = jest.fn().mockReturnValue(true);
   cluster.marker = new google.maps.Marker();
-  expect(cluster.count).toBe(1);
+  expect(cluster.count).toBe(0);
   cluster.delete();
   expect(cluster.count).toBe(0);
   expect(cluster.marker).toBeUndefined();
