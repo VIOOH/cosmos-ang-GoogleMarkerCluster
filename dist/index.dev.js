@@ -1617,15 +1617,20 @@ var markerClusterer = (function (exports) {
       key: "count",
       get: function get() {
         // cluster counter show frames count, not furniture count
-        var counter = this.markers.filter(function (marker) {
-          return marker.getVisible();
-        }).map(function (m) {
-          return m.frames.filter(function (frame) {
-            return frame.visible;
-          }).length;
-        }).reduce(function (a, b) {
-          return a + b;
-        });
+        var counter = 0;
+
+        if (this.markers.length == 0) {
+          counter = this.markers.filter(function (marker) {
+            return marker.getVisible();
+          }).map(function (m) {
+            return m.frames.filter(function (frame) {
+              return frame.visible;
+            }).length;
+          }).reduce(function (a, b) {
+            return a + b;
+          }, 0);
+        }
+
         return counter;
       }
       /**
