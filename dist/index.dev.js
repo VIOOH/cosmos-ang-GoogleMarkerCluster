@@ -1560,6 +1560,8 @@ var markerClusterer = (function (exports) {
     }
   });
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+
   /**
    * Copyright 2021 Google LLC
    *
@@ -1619,7 +1621,7 @@ var markerClusterer = (function (exports) {
         // cluster counter show frames count, not furniture count
         var counter = 0;
 
-        if (this.markers.length == 0) {
+        if (this.markers.length !== 0) {
           counter = this.markers.filter(function (marker) {
             return marker.getVisible();
           }).map(function (m) {

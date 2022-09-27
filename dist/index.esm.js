@@ -28,6 +28,7 @@ function __rest(s, e) {
     return t;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Copyright 2021 Google LLC
  *
@@ -72,7 +73,7 @@ class Cluster {
     get count() {
         // cluster counter show frames count, not furniture count
         let counter = 0;
-        if (this.markers.length == 0) {
+        if (this.markers.length !== 0) {
             counter = this.markers
                 .filter((marker) => marker.getVisible())
                 .map((m) => m.frames.filter((frame) => frame.visible).length)
