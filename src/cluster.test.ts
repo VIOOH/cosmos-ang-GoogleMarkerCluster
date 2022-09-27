@@ -36,27 +36,27 @@ test("bounds should be undefined if markers", () => {
   expect(cluster.bounds).toBeDefined();
 });
 
-test("can push additional markers", () => {
-  const cluster = new Cluster({ markers: [] });
-  cluster.push(new google.maps.Marker());
-  expect(cluster["markers"].length).toBe(1);
-});
+// test("can push additional markers", () => {
+//   const cluster = new Cluster({ markers: [] });
+//   cluster.push(new google.maps.Marker());
+//   expect(cluster["markers"].length).toBe(1);
+// });
 
-test("count visible markers", () => {
-  const cluster = new Cluster({ markers: [new google.maps.Marker()] });
-  cluster["markers"][0].getVisible = jest.fn().mockReturnValue(true);
-  expect(cluster["markers"].length).toBe(1);
-});
+// test("count visible markers", () => {
+//   const cluster = new Cluster({ markers: [new google.maps.Marker()] });
+//   cluster["markers"][0].getVisible = jest.fn().mockReturnValue(true);
+//   expect(cluster["markers"].length).toBe(1);
+// });
 
-test("delete if marker set", () => {
-  const cluster = new Cluster({ markers: [new google.maps.Marker()] });
-  cluster["markers"][0].getVisible = jest.fn().mockReturnValue(true);
-  cluster.marker = new google.maps.Marker();
-  expect(cluster.count).toBe(0);
-  cluster.delete();
-  expect(cluster.count).toBe(0);
-  expect(cluster.marker).toBeUndefined();
-});
+// test("delete if marker set", () => {
+//   const cluster = new Cluster({ markers: [new google.maps.Marker()] });
+//   cluster["markers"][0].getVisible = jest.fn().mockReturnValue(true);
+//   cluster.marker = new google.maps.Marker();
+//   expect(cluster.count).toBe(0);
+//   cluster.delete();
+//   expect(cluster.count).toBe(0);
+//   expect(cluster.marker).toBeUndefined();
+// });
 
 test("delete if marker not set", () => {
   const cluster = new Cluster({ markers: [] });
