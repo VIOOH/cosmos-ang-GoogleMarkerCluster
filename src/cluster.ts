@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Copyright 2021 Google LLC
  *
@@ -56,7 +57,7 @@ export class Cluster {
   public get count(): number {
     // cluster counter show frames count, not furniture count
     let counter = 0;
-    if (this.markers.length == 0) {
+    if (this.markers.length !== 0) {
       counter = this.markers
         .filter((marker) => marker.getVisible())
         .map((m: any) => m.frames.filter((frame: any) => frame.visible).length)
