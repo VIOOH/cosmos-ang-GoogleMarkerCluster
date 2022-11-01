@@ -66,11 +66,19 @@ class Cluster {
     get count() {
         // cluster counter show frames count, not furniture count
         let counter = 0;
-        if (this.markers.length !== 0) {
-            counter = this.markers
-                .filter((marker) => marker.getVisible())
-                .map((m) => m.frames.filter((frame) => frame.visible).length)
-                .reduce((a, b) => a + b, 0);
+        const visibleMarkers = this.markers.filter((m) => m.getVisible());
+        if (visibleMarkers[0].frames) {
+            for (const marker of visibleMarkers) {
+                const frames = marker.frames || [];
+                for (const frame of frames) {
+                    if (frame.visible) {
+                        counter++;
+                    }
+                }
+            }
+        }
+        else {
+            counter = visibleMarkers.length;
         }
         return counter;
     }
