@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Algorithm, SuperClusterAlgorithm } from "./algorithms";
+import { Algorithm, GridAlgorithm } from "./algorithms";
 import { ClusterStats, DefaultRenderer, Renderer } from "./renderer";
 
 import { Cluster } from "./cluster";
@@ -77,7 +77,7 @@ export class MarkerClusterer extends OverlayViewSafe {
   constructor({
     map,
     markers = [],
-    algorithm = new SuperClusterAlgorithm({}),
+    algorithm = new GridAlgorithm({}),
     renderer = new DefaultRenderer(),
     onClusterClick = defaultOnClusterClickHandler,
   }: MarkerClustererOptions) {

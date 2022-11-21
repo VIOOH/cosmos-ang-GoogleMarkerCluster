@@ -51,7 +51,7 @@ export class GridAlgorithm extends AbstractViewportAlgorithm {
   protected clusters: Cluster[] = [];
   protected state: { zoom: number };
 
-  constructor({ maxDistance = 40000, gridSize = 40, ...options }: GridOptions) {
+  constructor({ maxDistance = 40000, gridSize = 50, ...options }: GridOptions) {
     super(options);
 
     this.maxDistance = maxDistance;

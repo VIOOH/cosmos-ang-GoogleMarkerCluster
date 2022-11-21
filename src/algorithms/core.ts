@@ -64,7 +64,7 @@ export interface AlgorithmOptions {
 export abstract class AbstractAlgorithm implements Algorithm {
   protected maxZoom: number;
 
-  constructor({ maxZoom = 16 }: AlgorithmOptions) {
+  constructor({ maxZoom = 14 }: AlgorithmOptions) {
     this.maxZoom = maxZoom;
   }
   /**
