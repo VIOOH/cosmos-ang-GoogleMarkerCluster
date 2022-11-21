@@ -1842,7 +1842,7 @@ var markerClusterer = (function (exports) {
   var AbstractAlgorithm = /*#__PURE__*/function () {
     function AbstractAlgorithm(_ref) {
       var _ref$maxZoom = _ref.maxZoom,
-          maxZoom = _ref$maxZoom === void 0 ? 16 : _ref$maxZoom;
+          maxZoom = _ref$maxZoom === void 0 ? 14 : _ref$maxZoom;
 
       _classCallCheck(this, AbstractAlgorithm);
 
@@ -2090,7 +2090,7 @@ var markerClusterer = (function (exports) {
       var _a$maxDistance = _a.maxDistance,
           maxDistance = _a$maxDistance === void 0 ? 40000 : _a$maxDistance,
           _a$gridSize = _a.gridSize,
-          gridSize = _a$gridSize === void 0 ? 40 : _a$gridSize,
+          gridSize = _a$gridSize === void 0 ? 50 : _a$gridSize,
           options = __rest(_a, ["maxDistance", "gridSize"]);
 
       _this = _super.call(this, options);
@@ -3835,7 +3835,7 @@ var markerClusterer = (function (exports) {
           _ref$markers = _ref.markers,
           markers = _ref$markers === void 0 ? [] : _ref$markers,
           _ref$algorithm = _ref.algorithm,
-          algorithm = _ref$algorithm === void 0 ? new SuperClusterAlgorithm({}) : _ref$algorithm,
+          algorithm = _ref$algorithm === void 0 ? new GridAlgorithm({}) : _ref$algorithm,
           _ref$renderer = _ref.renderer,
           renderer = _ref$renderer === void 0 ? new DefaultRenderer() : _ref$renderer,
           _ref$onClusterClick = _ref.onClusterClick,

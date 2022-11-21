@@ -169,7 +169,7 @@ const pixelBoundsToLatLngBounds = ({ northEast, southWest }, projection) => {
  * @hidden
  */
 class AbstractAlgorithm {
-    constructor({ maxZoom = 16 }) {
+    constructor({ maxZoom = 14 }) {
         this.maxZoom = maxZoom;
     }
     /**
@@ -256,7 +256,7 @@ const noop = (markers) => {
  */
 class GridAlgorithm extends AbstractViewportAlgorithm {
     constructor(_a) {
-        var { maxDistance = 40000, gridSize = 40 } = _a, options = __rest(_a, ["maxDistance", "gridSize"]);
+        var { maxDistance = 40000, gridSize = 50 } = _a, options = __rest(_a, ["maxDistance", "gridSize"]);
         super(options);
         this.clusters = [];
         this.maxDistance = maxDistance;
@@ -613,7 +613,7 @@ const defaultOnClusterClickHandler = (_, cluster, map) => {
  *
  */
 class MarkerClusterer extends OverlayViewSafe {
-    constructor({ map, markers = [], algorithm = new SuperClusterAlgorithm({}), renderer = new DefaultRenderer(), onClusterClick = defaultOnClusterClickHandler, }) {
+    constructor({ map, markers = [], algorithm = new GridAlgorithm({}), renderer = new DefaultRenderer(), onClusterClick = defaultOnClusterClickHandler, }) {
         super();
         this.markers = [...markers];
         this.clusters = [];

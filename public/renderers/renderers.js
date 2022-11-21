@@ -1,4 +1,4 @@
-import { _ as __rest, S as Supercluster, f as fastDeepEqual, i as interpolateRgb, L as Loader } from './vendor.js';
+import { _ as __rest, f as fastDeepEqual, i as interpolateRgb, L as Loader } from './vendor.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
@@ -94,11 +94,82 @@ class Cluster {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const filterMarkersToPaddedViewport = (map, mapCanvasProjection, markers, viewportPadding) => {
+    const extendedMapBounds = extendBoundsToPaddedViewport(map.getBounds(), mapCanvasProjection, viewportPadding);
+    return markers.filter((marker) => extendedMapBounds.contains(marker.getPosition()));
+};
+/**
+ * Extends a bounds by a number of pixels in each direction.
+ */
+const extendBoundsToPaddedViewport = (bounds, projection, pixels) => {
+    const { northEast, southWest } = latLngBoundsToPixelBounds(bounds, projection);
+    const extendedPixelBounds = extendPixelBounds({ northEast, southWest }, pixels);
+    return pixelBoundsToLatLngBounds(extendedPixelBounds, projection);
+};
+/**
+ * @hidden
+ */
+const distanceBetweenPoints = (p1, p2) => {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+    const dLon = ((p2.lng - p1.lng) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((p1.lat * Math.PI) / 180) *
+            Math.cos((p2.lat * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+/**
+ * @hidden
+ */
+const latLngBoundsToPixelBounds = (bounds, projection) => {
+    return {
+        northEast: projection.fromLatLngToDivPixel(bounds.getNorthEast()),
+        southWest: projection.fromLatLngToDivPixel(bounds.getSouthWest()),
+    };
+};
+/**
+ * @hidden
+ */
+const extendPixelBounds = ({ northEast, southWest }, pixels) => {
+    northEast.x += pixels;
+    northEast.y -= pixels;
+    southWest.x -= pixels;
+    southWest.y += pixels;
+    return { northEast, southWest };
+};
+/**
+ * @hidden
+ */
+const pixelBoundsToLatLngBounds = ({ northEast, southWest }, projection) => {
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(projection.fromDivPixelToLatLng(northEast));
+    bounds.extend(projection.fromDivPixelToLatLng(southWest));
+    return bounds;
+};
+
+/**
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * @hidden
  */
 class AbstractAlgorithm {
-    constructor({ maxZoom = 16 }) {
+    constructor({ maxZoom = 14 }) {
         this.maxZoom = maxZoom;
     }
     /**
@@ -115,6 +186,39 @@ class AbstractAlgorithm {
      */
     noop({ markers }) {
         return noop(markers);
+    }
+}
+/**
+ * Abstract viewport algorithm proves a class to filter markers by a padded
+ * viewport. This is a common optimization.
+ *
+ * @hidden
+ */
+class AbstractViewportAlgorithm extends AbstractAlgorithm {
+    constructor(_a) {
+        var { viewportPadding = 60 } = _a, options = __rest(_a, ["viewportPadding"]);
+        super(options);
+        this.viewportPadding = 60;
+        this.viewportPadding = viewportPadding;
+    }
+    calculate({ markers, map, mapCanvasProjection, }) {
+        if (map.getZoom() >= this.maxZoom) {
+            return {
+                clusters: this.noop({
+                    markers,
+                    map,
+                    mapCanvasProjection,
+                }),
+                changed: false,
+            };
+        }
+        return {
+            clusters: this.cluster({
+                markers: filterMarkersToPaddedViewport(map, mapCanvasProjection, markers, this.viewportPadding),
+                map,
+                mapCanvasProjection,
+            }),
+        };
     }
 }
 /**
@@ -144,71 +248,72 @@ const noop = (markers) => {
  * limitations under the License.
  */
 /**
- * A very fast JavaScript algorithm for geospatial point clustering using KD trees.
+ * The default Grid algorithm historically used in Google Maps marker
+ * clustering.
  *
- * @see https://www.npmjs.com/package/supercluster for more information on options.
+ * The Grid algorithm does not implement caching and markers may flash as the
+ * viewport changes. Instead use {@link SuperClusterAlgorithm}.
  */
-class SuperClusterAlgorithm extends AbstractAlgorithm {
+class GridAlgorithm extends AbstractViewportAlgorithm {
     constructor(_a) {
-        var { maxZoom, radius = 60 } = _a, options = __rest(_a, ["maxZoom", "radius"]);
-        super({ maxZoom });
-        this.superCluster = new Supercluster(Object.assign({ maxZoom: this.maxZoom, radius }, options));
+        var { maxDistance = 40000, gridSize = 50 } = _a, options = __rest(_a, ["maxDistance", "gridSize"]);
+        super(options);
+        this.clusters = [];
+        this.maxDistance = maxDistance;
+        this.gridSize = gridSize;
         this.state = { zoom: null };
     }
-    calculate(input) {
+    calculate({ markers, map, mapCanvasProjection, }) {
+        const state = { zoom: map.getZoom() };
         let changed = false;
-        if (!fastDeepEqual(input.markers, this.markers)) {
-            changed = true;
-            // TODO use proxy to avoid copy?
-            this.markers = [...input.markers];
-            const points = this.markers.map((marker) => {
-                return {
-                    type: "Feature",
-                    geometry: {
-                        type: "Point",
-                        coordinates: [
-                            marker.getPosition().lng(),
-                            marker.getPosition().lat(),
-                        ],
-                    },
-                    properties: { marker },
-                };
-            });
-            this.superCluster.load(points);
-        }
-        const state = { zoom: input.map.getZoom() };
-        if (!changed) {
-            if (this.state.zoom > this.maxZoom && state.zoom > this.maxZoom) ;
-            else {
-                changed = changed || !fastDeepEqual(this.state, state);
-            }
+        if (this.state.zoom > this.maxZoom && state.zoom > this.maxZoom) ;
+        else {
+            changed = !fastDeepEqual(this.state, state);
         }
         this.state = state;
-        if (changed) {
-            this.clusters = this.cluster(input);
+        if (map.getZoom() >= this.maxZoom) {
+            return {
+                clusters: this.noop({
+                    markers,
+                    map,
+                    mapCanvasProjection,
+                }),
+                changed: changed,
+            };
         }
-        return { clusters: this.clusters, changed };
+        return {
+            clusters: this.cluster({
+                markers: filterMarkersToPaddedViewport(map, mapCanvasProjection, markers, this.viewportPadding),
+                map,
+                mapCanvasProjection,
+            }),
+        };
     }
-    cluster({ map }) {
-        return this.superCluster
-            .getClusters([-180, -90, 180, 90], Math.round(map.getZoom()))
-            .map(this.transformCluster.bind(this));
+    cluster({ markers, map, mapCanvasProjection, }) {
+        this.clusters = [];
+        markers.forEach((marker) => {
+            this.addToClosestCluster(marker, map, mapCanvasProjection);
+        });
+        return this.clusters;
     }
-    transformCluster({ geometry: { coordinates: [lng, lat], }, properties, }) {
-        if (properties.cluster) {
-            return new Cluster({
-                markers: this.superCluster
-                    .getLeaves(properties.cluster_id, Infinity)
-                    .map((leaf) => leaf.properties.marker),
-                position: new google.maps.LatLng({ lat, lng }),
-            });
+    addToClosestCluster(marker, map, projection) {
+        let maxDistance = this.maxDistance; // Some large number
+        let cluster = null;
+        for (let i = 0; i < this.clusters.length; i++) {
+            const candidate = this.clusters[i];
+            const distance = distanceBetweenPoints(candidate.bounds.getCenter().toJSON(), marker.getPosition().toJSON());
+            if (distance < maxDistance) {
+                maxDistance = distance;
+                cluster = candidate;
+            }
+        }
+        if (cluster &&
+            extendBoundsToPaddedViewport(cluster.bounds, projection, this.gridSize).contains(marker.getPosition())) {
+            cluster.push(marker);
         }
         else {
-            const marker = properties.marker;
-            return new Cluster({
-                markers: [marker],
-                position: marker.getPosition(),
-            });
+            const cluster = new Cluster({ markers: [marker] });
+            this.clusters.push(cluster);
         }
     }
 }
@@ -389,7 +494,7 @@ const defaultOnClusterClickHandler = (_, cluster, map) => {
  *
  */
 class MarkerClusterer extends OverlayViewSafe {
-    constructor({ map, markers = [], algorithm = new SuperClusterAlgorithm({}), renderer = new DefaultRenderer(), onClusterClick = defaultOnClusterClickHandler, }) {
+    constructor({ map, markers = [], algorithm = new GridAlgorithm({}), renderer = new DefaultRenderer(), onClusterClick = defaultOnClusterClickHandler, }) {
         super();
         this.markers = [...markers];
         this.clusters = [];
